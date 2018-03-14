@@ -9,10 +9,10 @@ var zoom = 1;
 var targetZoom = 1;
 
 var camPosX = 0;
-var targetCamPosX = 100;
+var targetCamPosX = 0;
 
 var camPosY = 0;
-var targetCamPosY = 100;
+var targetCamPosY = 0;
 
 function init() {
   console.log("init canvas");
@@ -31,8 +31,8 @@ function getRandomColor() {}
 function clearCanvas() {
   ctx.fillStyle = "black";
   ctx.fillRect(-halfWidth / zoom + camPosX, -halfHeight / zoom + camPosY, width / zoom, height / zoom);
-  ctx.strokeStyle = "#FF0000";
-  ctx.strokeRect(-halfWidth / zoom + camPosX, -halfHeight / zoom + camPosY, width / zoom, height / zoom);
+//   ctx.strokeStyle = "#FF0000";
+//   ctx.strokeRect(-halfWidth / zoom + camPosX, -halfHeight / zoom + camPosY, width / zoom, height / zoom);
 }
 
 function draw() {

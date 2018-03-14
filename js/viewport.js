@@ -1,57 +1,23 @@
 import input from "./input.js";
 import canvas from "./canvas.js";
+import files from "./files.js";
 
 var zoom = 1;
+
+var buttons = [];
+
+var Modes = Object.freeze({
+  clear: 1,
+  drawWall: 2
+});
+var mode = Modes.clear;
 
 var wallStartX, wallStartY, wallEndX, wallEndY;
 var wallStart = false;
 
 var level = {};
 
-var walls = [
-  {
-    x1: 300,
-    y1: 50,
-    x2: 550,
-    y2: 300
-  },
-  {
-    x1: 550,
-    y1: 300,
-    x2: 300,
-    y2: 550
-  },
-  {
-    x1: 300,
-    y1: 550,
-    x2: 50,
-    y2: 50
-  },
-  {
-    x1: 50,
-    y1: 50,
-    x2: 300,
-    y2: 50
-  },
-  {
-    x1: 350,
-    y1: 270,
-    x2: 300,
-    y2: 250
-  },
-  {
-    x1: 300,
-    y1: 250,
-    x2: 250,
-    y2: 300
-  },
-  {
-    x1: 250,
-    y1: 300,
-    x2: 350,
-    y2: 270
-  }
-];
+var tempWalls = [];
 
 function move() {
   //zoom
@@ -64,6 +30,8 @@ function move() {
   }
 
   if (zoom < 0.1) zoom = 0.1;
+  if (zoom > 5) zoom = 5;
+
   canvas.setZoom(zoom);
 
   //pan
@@ -71,14 +39,27 @@ function move() {
     canvas.panCam(-input.mouse.dWorldX, -input.mouse.dWorldY);
   }
 
-  if (input.mouse.doubleClick) {
-    drawWall();
+  if (input.mouse.doubleClick && wallStart) {
+    continuWall();
+  } else if (input.mouse.doubleClick) {
+    startWall();
   }
+  //   console.log(zoom, input.mouse.worldX, input.mouse.worldY);
+}
 
-  if (input.mouse.left && wallStart) {
-    continuWall;
-  }
-  console.log(zoom, input.mouse.worldX, input.mouse.worldY);
+function changeMode(_mode) {
+  mode = _mode;
+  console.log(mode);
+}
+
+function btnChangeMode(_mode) {
+  return changeMode(_mode)
+}
+
+function distance(x1, y1, x2, y2) {
+  var dist = Math.hypot(x2 - x1, y2 - y1);
+  console.log(dist);
+  return dist;
 }
 
 function addWall(x1, y1, x2, y2) {
@@ -90,34 +71,32 @@ function addWall(x1, y1, x2, y2) {
   });
 }
 
-function drawWall() {
-  if (!wallStart) {
-    startWall();
-  } else {
-    finishWall();
-  }
-}
-
 function startWall() {
   wallStart = true;
   wallStartX = input.mouse.worldX;
   wallStartY = input.mouse.worldY;
 }
 
-function continuWall() {}
+function continuWall() {
+  console.log(input.mouse.worldX, input.mouse.worldY, wallStartX, wallStartY);
+  if (
+    distance(input.mouse.worldX, input.mouse.worldY, wallStartX, wallStartY) < 25
+  ) {
+    finishWall();
+  } else {
+    addWall(wallStartX, wallStartY, input.mouse.worldX, input.mouse.worldY);
+    wallStartX = input.mouse.worldX;
+    wallStartY = input.mouse.worldY;
+  }
+}
 
 function finishWall() {
   wallStart = false;
+  console.log(walls);
 }
 
-function draw() {
-  //draw grid
-  canvas.clearCanvas();
-  canvas.ctx.beginPath();
-  canvas.ctx.strokeStyle = "green";
-  canvas.ctx.lineWidth = 3;
-  canvas.ctx.arc(0, 0, 15, 0, Math.PI * 2);
-  canvas.ctx.stroke();
+function drawWalls(Walls, color) {
+  if (color) canvas.ctx.strokeStyle = color;
 
   walls.forEach(wall => {
     canvas.ctx.beginPath();
@@ -126,8 +105,37 @@ function draw() {
     canvas.ctx.lineTo(wall.x2, wall.y2);
     canvas.ctx.stroke();
   });
+}
 
-  if(wallStart){
+function drawGrid() {
+  var camPos = canvas.getCamPos();
+  var gridStartX = -canvas.halfWidth / canvas.getZoom() + camPos.x;
+  var gridStartY = -canvas.halfHeight / canvas.getZoom() + camPos.y;
+  var gridEndX = gridStartX + canvas.width;
+  var gridEndY = gridEndY + canvas.height;
+
+  if (canvas.getZoom() >= 1) {
+    for (var i = 0; i < 5; i++) {
+      
+    }
+  }
+
+  canvas.ctx.beginPath();
+  canvas.ctx.strokeStyle = "green";
+  canvas.ctx.lineWidth = 3;
+  canvas.ctx.arc(0, 0, 15, 0, Math.PI * 2);
+  canvas.ctx.stroke();
+}
+
+function draw() {
+
+  drawGrid();
+
+  if (level.walls) {
+    drawWalls(level.walls, "green");
+  }
+
+  if (wallStart) {
     //   console.log(wallStartX, wallStartY, input.mouse.WorldX, input.mouse.WorldY)
     canvas.ctx.beginPath();
     canvas.ctx.strokeStyle = "green";
@@ -137,10 +145,23 @@ function draw() {
   }
 }
 
+function initInterface() {
+  //init buttons
+  var wallModeBtn = document.getElementById("wallMode");
+
+  wallModeBtn.onclick = function () {
+    changeMode(Modes.drawWall);
+  }
+}
+
 function init() {
   console.log("init viewport");
+  initInterface();
 }
 
 init();
 
-export default { move, draw };
+export default {
+  move,
+  draw
+};
